@@ -1,23 +1,53 @@
-CREATE TABLE users (
-    id SERIAL PRIMARY KEY,
-    username VARCHAR(50),
-    email VARCHAR(100),
-    registration_date DATE
-);
+from PySide6.QtWidgets import QMainWindow, QPushButton, QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, QTableWidgetItem
+from db import Game, Users, Session
 
-CREATE TABLE games (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(100),
-    genre VARCHAR(50),
-    release_date DATE,
-    developer VARCHAR(100)
-);
 
-CREATE TABLE game_reviews (
-    id SERIAL PRIMARY KEY,
-    user_id INT REFERENCES users(id),
-    game_id INT REFERENCES games(id),
-    review TEXT,
-    rating INT CHECK (rating BETWEEN 1 AND 10),
-    review_date DATE DEFAULT CURRENT_DATE
-);
+class MainWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("asd")
+        self.setMinimumSize(1024,720)
+        self.setup_ui()
+
+
+    def setup_ui(self):
+        central_widget = QWidget()
+        self.setCentralWidget(central_widget)
+
+
+        layout = QVBoxLayout(central_widget)
+       
+        self.add_button = QPushButton("add")
+        self.delete_button = QPushButton("delete")
+       
+        self.table = QTableWidget()
+        self.table.setColumnCount(2)
+        self.table.setHorizontalHeaderLabels(["Nickname", "Game"])
+        self.load_data()
+
+
+
+
+        layout.addWidget(self.add_button)
+        layout.addWidget(self.delete_button)
+        layout.addWidget(self.table)
+
+
+    def load_data(self):
+        session = Session()
+
+
+        users = session.query(Users).all()
+        games = {game.id: game.name for game in session.query(Game).all()}
+
+
+        self.table.setRowCount(len(users))
+
+
+        for row, user in enumerate(users):
+            self.table.setItem(row, 0, QTableWidgetItem(user.nickname))
+            self.table.setItem(row, 1, QTableWidgetItem(games.get(user.game_id)))
+
+
+        session.close()
+
